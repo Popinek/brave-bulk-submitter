@@ -1,0 +1,21 @@
+{
+  "name": "brave-bulk-submitter",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A local-first dashboard for batching public website URLs into Brave Search with validation, visible progress, pacing, and retry controls.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test",
+    "check": "node --check src/server.js && node --check src/queue.js && node --check src/submitter.js && node --check src/public/app.js"
+  },
+  "dependencies": {
+    "playwright": "^1.52.0"
+  }
+}
+

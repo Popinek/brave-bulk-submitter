@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Local-first dashboard for batching public website URLs into Brave Search with validation, visible progress, pacing, and retry controls." />
+    <title>Brave Bulk Submitter</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="Brave Bulk Submitter home">
+          <span class="brand-mark">BB</span>
+          <span>
+            <strong>Brave Bulk Submitter</strong>
+            <small>Local indexing desk</small>
+          </span>
+        </a>
+        <div class="topbar-meta">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span>Private by default</span>
+          <span class="mono">127.0.0.1</span>
+        </div>
+      </header>
+
+      <main>
+        <section class="hero">
+          <div class="hero-copy">
+            <p class="eyebrow">BRAVE SEARCH / URL REFRESH QUEUE</p>
+            <h1>One queue.<br /><em>Every domain.</em></h1>
+            <p class="hero-lede">
+              Submit a batch of public site URLs through Brave Search with a visible,
+              rate-aware queue and a clean record of what happened.
+            </p>
+            <div class="hero-note">
+              <span class="note-index">01</span>
+              <span>Runs on your machine. No API keys. No credential storage.</span>
+            </div>
+          </div>
+          <div class="hero-aside" aria-label="Product summary">
+            <div class="aside-rule"></div>
+            <p class="aside-label">OPERATING MODE</p>
+            <p class="aside-value">Human-in-the-loop</p>
+            <p class="aside-copy">
+              Brave may ask for human verification. The app waits for the result and
+              stops safely when manual attention is required.
+            </p>
+            <a class="text-link" href="https://search.brave.com/submit-url" target="_blank" rel="noreferrer">Open Brave submission page <span aria-hidden="true">↗</span></a>
+          </div>
+        </section>
+
+        <section class="metrics" aria-label="Queue metrics">
+          <div class="metric">
+            <span class="metric-label">Queue</span>
+            <strong id="metric-total">0</strong>
+            <span class="metric-caption">URLs loaded</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Ready</span>
+            <strong id="metric-ready">0</strong>
+            <span class="metric-caption">Waiting to submit</span>
+          </div>
+          <div class="metric metric-accent">
+            <span class="metric-label">Accepted</span>
+            <strong id="metric-success">0</strong>
+            <span class="metric-caption">Brave confirmations</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Run state</span>
+            <strong id="metric-state">Idle</strong>
+            <span class="metric-caption" id="metric-progress">No active run</span>
+          </div>
+        </section>
+
+        <section class="tool-grid" aria-label="Queue controls">
+          <div class="panel import-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">01 / LOAD QUEUE</p>
+                <h2>Bring in your URLs</h2>
+              </div>
+              <span class="panel-tag">TXT / CSV / PASTE</span>
+            </div>
+            <label class="field-label" for="url-input">Public URLs</label>
+            <textarea id="url-input" rows="7" spellcheck="false" placeholder="example.com
+https://another-site.com/sitemap.xml"></textarea>
+            <div class="input-footer">
+              <span id="parse-hint">One URL per line. Duplicates are removed.</span>
+              <label class="file-button" for="file-input">Import file</label>
+              <input id="file-input" type="file" accept=".txt,.csv,text/plain,text/csv" />
+            </div>
+            <div class="button-row">
+              <button id="load-button" class="button button-primary" type="button">Replace queue</button>
+            </div>
+            <p id="load-error" class="form-message" role="alert" hidden></p>
+          </div>
+
+          <div class="panel run-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">02 / RUN CONTROL</p>
+                <h2>Send with guardrails</h2>
+              </div>
+              <span id="run-badge" class="run-badge">IDLE</span>
+            </div>
+            <div class="control-copy">
+              <p>Select rows in the queue, then start the run. Each URL opens in a visible browser page and is submitted individually.</p>
+            </div>
+            <label class="check-row">
+              <input id="confirm-send" type="checkbox" />
+              <span>I understand this sends the selected URLs to Brave Search.</span>
+            </label>
+            <div class="button-row run-actions">
+              <button id="run-button" class="button button-primary" type="button">Submit selected</button>
+              <button id="retry-button" class="button button-quiet" type="button">Retry failed</button>
+              <button id="stop-button" class="button button-danger" type="button" disabled>Stop after current</button>
+            </div>
+            <p id="run-message" class="form-message" role="status"></p>
+          </div>
+        </section>
+
+        <section class="queue-section" aria-label="Submission queue">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">03 / SUBMISSION QUEUE</p>
+              <h2>Site register</h2>
+            </div>
+            <div class="selection-tools">
+              <button id="select-all-button" class="text-button" type="button">Select all</button>
+              <span class="divider" aria-hidden="true"></span>
+              <button id="clear-selection-button" class="text-button" type="button">Clear selection</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th class="check-column"><span class="sr-only">Select</span></th>
+                  <th>URL</th>
+                  <th>Status</th>
+                  <th>Attempts</th>
+                  <th>Last activity</th>
+                </tr>
+              </thead>
+              <tbody id="queue-body">
+                <tr><td colspan="5" class="empty-row">Loading queue...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="log-section" aria-label="Activity log">
+          <div class="section-heading compact-heading">
+            <div>
+              <p class="eyebrow">04 / ACTIVITY LOG</p>
+              <h2>What happened</h2>
+            </div>
+            <span class="log-note">In-memory only</span>
+          </div>
+          <div id="activity-log" class="activity-log">
+            <p class="empty-log">No activity yet. Load a queue to begin.</p>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <span>Brave Bulk Submitter <span class="mono">v0.1.0</span></span>
+        <span>Local-first utility for public URLs</span>
+      </footer>
+    </div>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
+
